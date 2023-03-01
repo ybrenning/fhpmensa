@@ -41,4 +41,4 @@ jobs:
         options:
           --env BOT_TOKEN=${{ secrets.BOT_TOKEN }}
           --env CHAT_ID=${{ secrets.CHAT_ID }}
-        run: echo "Run successful"
+        run: docker container run
