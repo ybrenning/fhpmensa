@@ -15,7 +15,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Run Docker
+      env:
+        USERNAME: ${{ secrets.USERNAME }}
       run: |
-        - echo ${{ secrets.USERNAME }}
+        - echo env.USERNAME
         - docker login -u ${{ secrets.USERNAME }} -p ${{ secrets.PASSWORD }}
         - docker container run --env ${{ secrets.BOT_TOKEN }} --env ${{ secrets.CHAT_ID }}fhpmensa:latest
