@@ -1,3 +1,12 @@
+"""Basic script to fetch today's menu from the FHP homepage
+and send a reformatted version of it to a group chat using the Telegram API.
+
+Note:
+    This script is missing error handling for bad API requests/responses.
+"""
+
+__author__ = "Yannick Brenning"
+
 import logging
 import os
 from datetime import datetime
@@ -23,6 +32,14 @@ emojis = ["😷", "🤢", "💩", "🤮", "☣️"]
 
 
 def get_todays_menu(day: int) -> str | None:
+    """Fetches menu of the current weekday
+
+    Args:
+        day (int): day of week from 0-6
+
+    Returns:
+        str | None: today's menu if weekday, None otherwise
+    """
     if day > 4:
         return None
 
@@ -54,7 +71,7 @@ def get_todays_menu(day: int) -> str | None:
                     cols[day].find(class_="description").text.replace("-", "\-") + "\n"
                 )
             else:
-                menu += "Nothing\n"
+                menu += "Not Available\n"
             if cols[day].find(class_="price"):
                 menu += cols[day].find(class_="price").text + "\n"
 
