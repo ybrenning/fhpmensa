@@ -21,6 +21,6 @@ jobs:
       uses: elgohr/Publish-Docker-Github-Action@v5
       with:
         name: ybrenning/fhpmensa
-        username: ${{ secrets.USERNAME }}
+        username: ybrenning
         password: ${{ secrets.PASSWORD }}
 
