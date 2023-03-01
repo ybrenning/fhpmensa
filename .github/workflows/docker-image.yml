@@ -23,6 +23,5 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
     
-    - name: Run Docker
-      run: docker container run --env ${{ secrets.BOT_TOKEN }} --env ${{ secrets.CHAT_ID }} fhpmensa:latest
+    - run: docker container run --env ${{ secrets.BOT_TOKEN }} --env ${{ secrets.CHAT_ID }} fhpmensa:latest
 
