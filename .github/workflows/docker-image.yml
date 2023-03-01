@@ -14,9 +14,5 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Run Docker
-      run: |
-        echo ${{secrets.USERNAME}} | sed 's/./& /g' 
-        docker login -u ${{ secrets.USERNAME }} -p ${{ secrets.PASSWORD }}
-        docker container run --env ${{ secrets.BOT_TOKEN }} --env ${{ secrets.CHAT_ID }}fhpmensa:latest
-
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag ybrenning/fhpmensa:$(date +%s)
