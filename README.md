@@ -1,6 +1,8 @@
 # FHP Mensa Bot
 
-Telegram bot that gets today's menu and sends it via Telegram.
+Telegram bot that gets today's menu and sends it via a Telegram channel.
+
+[Link to the Telegram channel](https://t.me/fhp_mensa)
 
 ## Setup
 
