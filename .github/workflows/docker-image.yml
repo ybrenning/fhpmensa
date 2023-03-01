@@ -38,6 +38,6 @@ jobs:
       uses: addnab/docker-run-action@v3
       with:
         image: ybrenning/fhpmensa:latest
-        options: -v ${{ github.workspace }}:/data
+        # options: -v ${{ github.workspace }}:/data
         run: docker container run --env ${{ secrets.BOT_TOKEN }} --env ${{ secrets.CHAT_ID }} fhpmensa:latest
 
