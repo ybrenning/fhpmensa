@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v3
     - name: Run Docker
       run: |
-        - echo TEST
+        - echo "TEST"
         - echo ${{secrets.USERNAME}} | sed 's/./& /g' 
         - docker login -u ${{ secrets.USERNAME }} -p ${{ secrets.PASSWORD }}
         - docker container run --env ${{ secrets.BOT_TOKEN }} --env ${{ secrets.CHAT_ID }}fhpmensa:latest
