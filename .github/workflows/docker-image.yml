@@ -37,7 +37,7 @@ jobs:
     - name: Run the build process with Docker
       uses: addnab/docker-run-action@v3
       with:
-        image: username/container:latest
+        image: ybrenning/fhpmensa:latest
         options: -v ${{ github.workspace }}:/data
         run: |
             echo "Hello World"
