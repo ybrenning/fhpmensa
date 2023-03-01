@@ -38,5 +38,4 @@ jobs:
       uses: addnab/docker-run-action@v3
       with:
         image: ybrenning/fhpmensa:latest
-        run: docker run --env ${{ secrets.BOT_TOKEN }} --env ${{ secrets.CHAT_ID }} image
 
