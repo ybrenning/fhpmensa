@@ -17,8 +17,8 @@ jobs:
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag ybrenning/fhpmensa:$(date +%s)
     
-    - name: Publish Docker
-      uses: elgohr/Publish-Docker-Github-Action@v5
+    - name: Run Docker
+      uses: docker/login-action@v2
       with:
         name: ybrenning/fhpmensa
         username: ${{ secrets.DOCKER_USERNAME }}
