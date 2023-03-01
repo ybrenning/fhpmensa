@@ -14,5 +14,5 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag ybrenning/fhpmensa:$(date +%s)
+    - name: Run Docker
+      run: docker container run --env ${{ secrets.BOT_TOKEN }} --env ${{ secrets.CHAT_ID }}fhpmensa:latest
