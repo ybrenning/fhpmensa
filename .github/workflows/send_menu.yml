@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Run Docker Image
 
 on:
   schedule:
@@ -8,7 +8,7 @@ jobs:
 
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu:latest
 
     steps:
     - name: Set up QEMU
@@ -23,13 +23,7 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
     
-    - name: Build and Push
-      uses: docker/build-push-action@v4
-      with:
-        push: true
-        tags: ybrenning/fhpmensa
-
-    - name: Check out the repo
+        - name: Check out the repo
       uses: actions/checkout@v2
       
     - name: Run the build process with Docker
