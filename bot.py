@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Basic script to fetch today's menu from the FHP homepage
 and send a reformatted version of it to a group chat using the Telegram API.
 
@@ -7,8 +9,8 @@ Note:
 
 __author__ = "Yannick Brenning"
 
-import logging
 import os
+import traceback
 from datetime import datetime
 
 import requests
@@ -37,6 +39,9 @@ def get_todays_menu(day: int) -> str | None:
     Args:
         day (int): day of week from 0-6
 
+    Raises:
+        AttributeError: if the page does not contain the menu table
+
     Returns:
         str | None: today's menu if weekday, None otherwise
     """
@@ -45,54 +50,73 @@ def get_todays_menu(day: int) -> str | None:
 
     menu = f"📆*Menu for {days[day]}*📆\n"
 
-    r = requests.get(MENU_URL)
-    soup = BeautifulSoup(r.text, features="html.parser")
+    try:
+        r = requests.get(MENU_URL)
+        soup = BeautifulSoup(r.text, features="html.parser")
 
-    table = soup.find("table")
+        table = soup.find("table")
 
-    assert table is not None
-    table_body = table.find("tbody")
+        if not table:
+            raise AttributeError("Menu table not found")
 
-    table_rows = table_body.find_all("tr")  # type: ignore
+        table_body = table.find("tbody")
 
-    i = 1
-    for tr in table_rows:
-        cols = tr.find_all("td")
+        if not table_body:
+            raise AttributeError("Table body of menu not found")
 
-        if not cols:
-            if i == 5:
-                menu += f"\n{emojis[i-1]} *Tagesangebot* {emojis[i-1]}\n"
+        table_rows = table_body.find_all("tr")  # type: ignore
+
+        i = 1
+        for tr in table_rows:
+            cols = tr.find_all("td")
+
+            if not cols:
+                if i == 5:
+                    menu += f"\n{emojis[i-1]} *Tagesangebot* {emojis[i-1]}\n"
+                else:
+                    menu += f"\n{emojis[i-1]} *Angebot {i}* {emojis[i-1]}\n"
+                    i += 1
             else:
-                menu += f"\n{emojis[i-1]} *Angebot {i}* {emojis[i-1]}\n"
-                i += 1
-        else:
-            if cols[day].find(class_="description"):
-                menu += (
-                    cols[day].find(class_="description").text.replace("-", "\-") + "\n"
-                )
-            else:
-                menu += "Not Available\n"
-            if cols[day].find(class_="price"):
-                menu += cols[day].find(class_="price").text + "\n"
+                if cols[day].find(class_="description"):
+                    menu += (
+                        cols[day].find(class_="description").text.replace("-", "\-")
+                        + "\n"
+                    )
+                else:
+                    menu += "Not Available\n"
+                if cols[day].find(class_="price"):
+                    menu += cols[day].find(class_="price").text + "\n"
+    except Exception:
+        traceback.print_exc()
+        menu = None
 
     return menu
 
 
-def main() -> None:
-    assert BOT_TOKEN is not None
+def send_menu() -> None:
+    """Makes the call to the Telegram API to send a menu message
+
+    Raises:
+        KeyError: if the bot API token and chat ID are not configured
+    """
+    if not BOT_TOKEN or not CHAT_ID:
+        raise KeyError("Missing environment variable configuration")
 
     menu = get_todays_menu(day=datetime.now().weekday())
 
     if menu:
-        response = requests.get(
-            f"{API_URL}{BOT_TOKEN}/sendMessage?chat_id={CHAT_ID}&text={menu}&parse_mode=MarkdownV2"
-        )
-    else:
-        response = "No request made"
+        try:
+            response = requests.get(
+                f"{API_URL}{BOT_TOKEN}/sendMessage?chat_id={CHAT_ID}&text={menu}&parse_mode=MarkdownV2"
+            )
+            response.raise_for_status()
+        except requests.exceptions.HTTPError:
+            traceback.print_exc()
 
-    logging.debug(response)
+
+def main() -> None:
+    send_menu()
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.DEBUG)
     main()
