@@ -2,9 +2,6 @@
 
 """Basic script to fetch today's menu from the FHP homepage
 and send a reformatted version of it to a group chat using the Telegram API.
-
-Note:
-    This script is missing error handling for bad API requests/responses.
 """
 
 __author__ = "Yannick Brenning"
