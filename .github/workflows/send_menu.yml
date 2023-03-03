@@ -2,7 +2,7 @@ name: Run Docker Image
 
 on:
   schedule:
-    - cron: '30 10 * * 1-5'
+    - cron: '* * * * *'
 
 jobs:
 
@@ -23,7 +23,7 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
     
-        - name: Check out the repo
+    - name: Check out the repo
       uses: actions/checkout@v2
       
     - name: Run the build process with Docker
