@@ -10,8 +10,8 @@ import os
 import traceback
 from datetime import datetime
 
+import bs4
 import requests
-from bs4 import BeautifulSoup
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
@@ -20,14 +20,106 @@ API_URL = "https://api.telegram.org/bot"
 MENU_URL = "https://www.mensaplan.de/potsdam/mensa-kiepenheuerallee/index.html"
 
 days = {
-    0: "Monday",
-    1: "Tuesday",
-    2: "Wednesday",
-    3: "Thursday",
-    4: "Friday",
+    0: "Montag",
+    1: "Dienstag",
+    2: "Mittwoch",
+    3: "Donnerstag",
+    4: "Freitag",
 }
 
 emojis = ["😷", "🤢", "💩", "🤮", "☣️"]
+
+
+def get_offer_type(offer_num: int) -> str:
+    """Get the string corresponding to an offer number
+
+    Args:
+        offer_num (int): current offer index
+
+    Returns:
+        str: display title for offer
+    """
+    if offer_num == 5:
+        return f"\n{emojis[offer_num-1]} *Tagesangebot* {emojis[offer_num-1]}\n"
+    else:
+        return f"\n{emojis[offer_num-1]} *Angebot {offer_num}* {emojis[offer_num-1]}\n"
+
+
+def get_offer_details(content: bs4.element.Tag) -> str:
+    """Get the offer details from an offer category
+
+    Args:
+        content (bs4.element.Tag): HTML content of offers
+
+    Returns:
+        str: names and prices of offers
+    """
+    descriptions = content.find_all(class_="description")
+    prices = content.find_all(class_="price")
+
+    if not descriptions and not prices:
+        return "Nicht verfügbar\n"
+
+    detail_text = ""
+    for detail in zip(descriptions, prices):
+        description, price = detail
+        detail_text += description.text.replace("-", "\-") + "\n" + price.text + "\n"
+
+    return detail_text
+
+
+def scrape_webpage(url: str) -> bs4.element.ResultSet:
+    """Get table content of the menu webpage
+
+    Args:
+        url (str): URL of the page
+
+    Raises:
+        AttributeError: if any element is missing
+
+    Returns:
+        bs4.element.ResultSet: HTML rows of menu table
+    """
+    r = requests.get(url)
+    soup = bs4.BeautifulSoup(r.text, features="html.parser")
+
+    table = soup.find("table")
+    if not table:
+        raise AttributeError("Menu table not found")
+
+    table_body = table.find("tbody")
+    if not table_body:
+        raise AttributeError("Table body of menu not found")
+
+    table_rows = table_body.find_all("tr")  # type: ignore
+    if not table_rows:
+        raise AttributeError("Table rows of menu not found")
+
+    return table_rows
+
+
+def get_todays_menu_body(day: int) -> str:
+    """Get the content of today's menu
+
+    Args:
+        day (int): given day from 0-6
+
+    Returns:
+        str: formatted menu body
+    """
+    table_rows = scrape_webpage(MENU_URL)
+
+    menu, i = "", 1
+    for tr in table_rows:
+        cols = tr.find_all("td")
+
+        if not cols:
+            menu += get_offer_type(i)
+            i += 1
+        else:
+            menu += get_offer_details(cols[day])
+
+    return menu
 
 
 def get_todays_menu(day: int) -> str | None:
@@ -36,58 +128,18 @@ def get_todays_menu(day: int) -> str | None:
     Args:
         day (int): day of week from 0-6
 
-    Raises:
-        AttributeError: if the page does not contain the menu table
-
     Returns:
         str | None: today's menu if weekday, None otherwise
     """
     if day > 4:
         return None
 
-    menu = f"📆*Menu for {days[day]}*📆\n"
-
     try:
-        r = requests.get(MENU_URL)
-        soup = BeautifulSoup(r.text, features="html.parser")
-
-        table = soup.find("table")
-
-        if not table:
-            raise AttributeError("Menu table not found")
-
-        table_body = table.find("tbody")
-
-        if not table_body:
-            raise AttributeError("Table body of menu not found")
-
-        table_rows = table_body.find_all("tr")  # type: ignore
-
-        i = 1
-        for tr in table_rows:
-            cols = tr.find_all("td")
-
-            if not cols:
-                if i == 5:
-                    menu += f"\n{emojis[i-1]} *Tagesangebot* {emojis[i-1]}\n"
-                else:
-                    menu += f"\n{emojis[i-1]} *Angebot {i}* {emojis[i-1]}\n"
-                    i += 1
-            else:
-                if cols[day].find(class_="description"):
-                    menu += (
-                        cols[day].find(class_="description").text.replace("-", "\-")
-                        + "\n"
-                    )
-                else:
-                    menu += "Not Available\n"
-                if cols[day].find(class_="price"):
-                    menu += cols[day].find(class_="price").text + "\n"
+        menu = f"📆*Mensaplan für {days[day]}*📆\n" + get_todays_menu_body(day)
+        return menu
     except Exception:
         traceback.print_exc()
-        menu = None
-
-    return menu
+        return None
 
 
 def send_menu() -> None:
@@ -95,6 +147,7 @@ def send_menu() -> None:
 
     Raises:
         KeyError: if the bot API token and chat ID are not configured
+        HTTPError: if the call makes a bad request
     """
     if not BOT_TOKEN or not CHAT_ID:
         raise KeyError("Missing environment variable configuration")
@@ -109,6 +162,8 @@ def send_menu() -> None:
             response.raise_for_status()
         except requests.exceptions.HTTPError:
             traceback.print_exc()
+    else:
+        print("No menu for today")
 
 
 def main() -> None:
